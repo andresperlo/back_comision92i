@@ -1,35 +1,17 @@
 const ProductModel = require("../model/product.schema");
 
-let baseDeDatosDeProductos = [
-  {
-    id: 1,
-    nombre: "Celular",
-    precio: "1500",
-  },
-  {
-    id: 2,
-    nombre: "Celular2",
-    precio: "1600",
-  },
-];
-
-const getAllProducts = (req, res) => {
+const getAllProducts = async (req, res) => {
   try {
-    res
-      .status(200)
-      .json({ mensaje: "Todos los productos", baseDeDatosDeProductos });
+    const allProducts = await ProductModel.find();
+    res.status(200).json({ mensaje: "Todos los productos", allProducts });
   } catch (error) {
     res.status(500).json({ msg: "Error: Server", error });
   }
 };
 
-const getOneProduct = (req, res) => {
+const getOneProduct = async (req, res) => {
   try {
-    /* req - es un objeto - body - params - query*/
-    console.log(req.params);
-    const product = baseDeDatosDeProductos.find(
-      (product) => product.id === Number(req.params.id)
-    );
+    const product = await ProductModel.findOne({ _id: req.params.id });
 
     if (product) {
       res.status(200).json({ mensaje: "Producto encontrado", product });
@@ -43,69 +25,58 @@ const getOneProduct = (req, res) => {
 
 const createProduct = async (req, res) => {
   try {
+    const { nombre, precio, codigo } = req.body;
+
+    if (!nombre && !precio && codigo) {
+      return res.status(400).json({ msg: "El Formulario esta Vacio" });
+    }
+
+    if (!nombre) {
+      return res.status(400).json({ msg: "El Campo NOMBRE esta Vacio" });
+    } else if (!precio) {
+      return res.status(400).json({ msg: "El Campo PRECIO esta Vacio" });
+    } else if (!codigo) {
+      return res.status(400).json({ msg: "El Campo CODIGO esta Vacio" });
+    }
+
     const newProduct = new ProductModel(req.body);
     await newProduct.save();
 
     res.status(201).json({ msg: "Producto Creado", newProduct });
-    /*   const newProd = req.body;
-    const productExist = baseDeDatosDeProductos.find(
-      (product) => product.nombre === req.body.nombre
-    );
-
-    if (!productExist) {
-      baseDeDatosDeProductos.push(newProd);
-      console.log(baseDeDatosDeProductos);
-      res
-        .status(201)
-        .json({ mensaje: "Producto creado correctamente", newProd });
-    } else {
-      res.status(400).json({ msg: "Producto ya existe en la base de datos" });
-    } */
   } catch (error) {
     res.status(500).json({ msg: "Error: Server", error });
   }
 };
 
-const updateProduct = (req, res) => {
+const updateProduct = async (req, res) => {
   try {
-    const positionProduct = baseDeDatosDeProductos.findIndex(
-      (product) => product.id === Number(req.params.id)
+    const updateProduct = await ProductModel.findByIdAndUpdate(
+      { _id: req.params.id },
+      req.body,
+      { new: true }
     );
 
-    if (positionProduct < 0) {
-      return res.status(404).json({ msg: "Producto no encontrado" });
-    }
-
-    baseDeDatosDeProductos[positionProduct] = req.body;
-
-    res.json({
+    res.status(200).json({
       mensaje: "Producto Actualizado",
-      updateProd: baseDeDatosDeProductos[positionProduct],
+      updateProduct,
     });
   } catch (error) {
     res.status(500).json({ msg: "Error: Server", error });
   }
 };
 
-const deleteProduct = (req, res) => {
+const deleteProduct = async (req, res) => {
   try {
-    const productosNoBorrados = baseDeDatosDeProductos.filter(
-      (product) => product.id !== Number(req.params.id)
-    );
+    const productExist = await ProductModel.findOne({ _id: req.params.id });
 
-    const productoABorrar = baseDeDatosDeProductos.filter(
-      (product) => product.id === Number(req.params.id)
-    );
-
-    if (!productoABorrar.length) {
-      return res.status(404).json({ msg: "ID incorrecto. Producto no existe" });
+    if (!productExist) {
+      return res.status(404).json({ msg: "Producto no encontrado" });
     }
 
-    baseDeDatosDeProductos = productosNoBorrados;
+    await ProductModel.findByIdAndDelete({ _id: req.params.id });
 
     res.status(200).json({
       mensaje: "Producto Eliminado correctamente",
-      baseDeDatosDeProductos,
     });
   } catch (error) {
     console.log(error);
