@@ -14,6 +14,12 @@ const UserSchema = new Schema({
     type: String,
     default: "user",
   },
+  idCart: {
+    type: String,
+  },
+  idFav: {
+    type: String,
+  },
 });
 
 const UserModel = model("users", UserSchema);

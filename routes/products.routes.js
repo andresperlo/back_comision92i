@@ -6,11 +6,12 @@ const {
   updateProduct,
   deleteProduct,
 } = require("../controllers/products.controllers");
+const auth = require("../middlewares/auth");
 const route = express.Router();
 
 /* Endpoint  - ruta + controlador = callback - */
 /* GET - Obtener */
-route.get("/", getAllProducts);
+route.get("/", auth("user"), getAllProducts);
 /* GET - Un Producto */
 route.get("/:id", getOneProduct);
 /* POST - Crear */
