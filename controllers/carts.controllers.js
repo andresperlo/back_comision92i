@@ -3,6 +3,12 @@ const ProductModel = require("../model/product.schema");
 
 const addProdCart = async (req, res) => {
   try {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(422).json(errors.array());
+    }
+
     const cart = await CartModel.findOne({ _id: req.idCart });
     const product = await ProductModel.findOne({ _id: req.params.idProd });
 
@@ -19,6 +25,12 @@ const addProdCart = async (req, res) => {
 
 const removeProdCart = async (req, res) => {
   try {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(422).json(errors.array());
+    }
+
     const cart = await CartModel.findOne({ _id: req.idCart });
     const products = cart.products.filter(
       (product) => product._id.toString() !== req.params.idProd

@@ -3,6 +3,12 @@ const ProductModel = require("../model/product.schema");
 
 const addProdFav = async (req, res) => {
   try {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(422).json(errors.array());
+    }
+
     const fav = await FavsModel.findOne({ _id: req.idCart });
     const product = await ProductModel.findOne({ _id: req.params.idProd });
 
@@ -19,6 +25,12 @@ const addProdFav = async (req, res) => {
 
 const removeProdFav = async (req, res) => {
   try {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(422).json(errors.array());
+    }
+
     const fav = await FavsModel.findOne({ _id: req.idCart });
     const products = fav.products.filter(
       (product) => product._id.toString() !== req.params.idProd

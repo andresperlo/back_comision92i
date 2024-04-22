@@ -1,8 +1,40 @@
+const { validationResult } = require("express-validator");
 const ProductModel = require("../model/product.schema");
+const cloudinary = require("../middlewares/cloudinary");
 
 const getAllProducts = async (req, res) => {
   try {
-    const allProducts = await ProductModel.find();
+    console.log(req.query);
+    const numeroPagina = req.query.numeroPagina || 0;
+    const limite = req.query.limite || 5;
+
+    const [products, count] = await Promise.all([
+      ProductModel.find()
+        .skip(numeroPagina * limite)
+        .limit(limite),
+      ProductModel.countDocuments(),
+    ]);
+
+    res
+      .status(200)
+      .json({ mensaje: "Todos los productos", products, count, limite });
+  } catch (error) {
+    res.status(500).json({ msg: "Error: Server", error });
+  }
+};
+
+const getAllProductsEnabled = async (req, res) => {
+  try {
+    const allProducts = await ProductModel.find({ disabled: false });
+    res.status(200).json({ mensaje: "Todos los productos", allProducts });
+  } catch (error) {
+    res.status(500).json({ msg: "Error: Server", error });
+  }
+};
+
+const getAllProductsDisabled = async (req, res) => {
+  try {
+    const allProducts = await ProductModel.find({ disabled: true });
     res.status(200).json({ mensaje: "Todos los productos", allProducts });
   } catch (error) {
     res.status(500).json({ msg: "Error: Server", error });
@@ -11,7 +43,14 @@ const getAllProducts = async (req, res) => {
 
 const getOneProduct = async (req, res) => {
   try {
-    const product = await ProductModel.findOne({ _id: req.params.id });
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json(errors.array());
+    }
+
+    const product = await ProductModel.findOne({
+      _id: req.params.id,
+    });
 
     if (product) {
       res.status(200).json({ mensaje: "Producto encontrado", product });
@@ -39,10 +78,19 @@ const createProduct = async (req, res) => {
       return res.status(400).json({ msg: "El Campo CODIGO esta Vacio" });
     }
 
-    const newProduct = new ProductModel(req.body);
-    await newProduct.save();
+    const responseCloudinary = await cloudinary.uploader.upload(req.file.path);
 
-    res.status(201).json({ msg: "Producto Creado", newProduct });
+    const newProduct = {
+      nombre,
+      precio,
+      codigo,
+      imagen: responseCloudinary.secure_url,
+    };
+
+    const newProd = new ProductModel(newProduct);
+    await newProd.save();
+
+    res.status(201).json({ msg: "Producto Creado", newProd });
   } catch (error) {
     res.status(500).json({ msg: "Error: Server", error });
   }
@@ -50,6 +98,12 @@ const createProduct = async (req, res) => {
 
 const updateProduct = async (req, res) => {
   try {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(422).json(errors.array());
+    }
+
     const updateProduct = await ProductModel.findByIdAndUpdate(
       { _id: req.params.id },
       req.body,
@@ -67,6 +121,12 @@ const updateProduct = async (req, res) => {
 
 const deleteProduct = async (req, res) => {
   try {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(422).json(errors.array());
+    }
+
     const productExist = await ProductModel.findOne({ _id: req.params.id });
 
     if (!productExist) {
@@ -84,10 +144,46 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+const disabledProduct = async (req, res) => {
+  try {
+    const product = await ProductModel.findOne({ _id: req.params.idProd });
+    console.log(product);
+    if (!product.disabled) {
+      product.disabled = true;
+      await product.save();
+      res.status(200).json({ msg: "Producto deshabilitado con exito" });
+    } else {
+      res.status(400).json({ msg: "Producto ya dashabilitado" });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const enabledProduct = async (req, res) => {
+  try {
+    const product = await ProductModel.findOne({ _id: req.params.idProd });
+
+    if (product.disabled) {
+      product.disabled = false;
+      await product.save();
+      res.status(200).json({ msg: "Producto habilitado con exito" });
+    } else {
+      res.status(400).json({ msg: "Producto ya habilitado" });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 module.exports = {
+  getAllProductsEnabled,
+  getAllProductsDisabled,
   getAllProducts,
   getOneProduct,
   createProduct,
   updateProduct,
   deleteProduct,
+  disabledProduct,
+  enabledProduct,
 };

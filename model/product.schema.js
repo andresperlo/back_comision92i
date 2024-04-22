@@ -13,6 +13,13 @@ const ProductSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  imagen: {
+    type: String,
+  },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const ProductModel = mongoose.model("products", ProductSchema);

@@ -6,6 +6,10 @@ const UserSchema = new Schema({
     required: true,
     unique: true,
   },
+  emailUsuario: {
+    type: String,
+    required: true,
+  },
   contrasenia: {
     type: String,
     required: true,
@@ -19,6 +23,10 @@ const UserSchema = new Schema({
   },
   idFav: {
     type: String,
+  },
+  disabled: {
+    type: Boolean,
+    default: false,
   },
 });
 
