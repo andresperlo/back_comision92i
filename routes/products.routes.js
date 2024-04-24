@@ -9,6 +9,7 @@ const {
   enabledProduct,
   getAllProductsEnabled,
   getAllProductsDisabled,
+  mercadoPagoPay,
 } = require("../controllers/products.controllers");
 const auth = require("../middlewares/auth");
 const { check } = require("express-validator");
@@ -27,6 +28,7 @@ route.get(
   getOneProduct
 );
 /* POST - Crear */
+route.post("/pay", mercadoPagoPay);
 route.post("/", multer.single("imagen"), createProduct);
 /* PUT - Actualizar */
 route.put(

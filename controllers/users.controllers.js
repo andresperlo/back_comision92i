@@ -40,17 +40,17 @@ const registerUser = async (req, res) => {
     let salt = bcrypt.genSaltSync(10);
     newUser.contrasenia = bcrypt.hashSync(req.body.contrasenia, salt);
 
-    const sendMail = await userRegister(emailUsuario);
+    //const sendMail = await userRegister(emailUsuario);
 
-    if (sendMail === 200) {
-      await newCart.save();
-      await newFav.save();
-      await newUser.save();
+    /* if (sendMail === 200) { */
+    await newCart.save();
+    await newFav.save();
+    await newUser.save();
 
-      res.status(201).json({ msg: "Usuario creado con exito", newUser });
-    } else {
+    res.status(201).json({ msg: "Usuario creado con exito", newUser });
+    /*} else {
       res.status(400).json({ msg: "ERRMAIL. No se pudo crear el usuario" });
-    }
+    } */
   } catch (error) {
     console.log(error);
     res.status(500).json({ msg: "Error: Server", error });
@@ -66,8 +66,9 @@ const loginUser = async (req, res) => {
     }
 
     const { nombreUsuario, contrasenia } = req.body;
-
+    console.log(nombreUsuario);
     const userExist = await UserModel.findOne({ nombreUsuario });
+    console.log(userExist);
     if (!userExist) {
       return res
         .status(422)
@@ -92,7 +93,9 @@ const loginUser = async (req, res) => {
 
       const token = jwt.sign(payload, process.env.JWT_SECRET);
 
-      res.status(200).json({ msg: "Usuario Logueado", token });
+      res
+        .status(200)
+        .json({ msg: "Usuario Logueado", token, role: userExist.role });
     } else {
       res.status(400).json({ msg: "no logueado" });
     }

@@ -1,12 +1,13 @@
 const { validationResult } = require("express-validator");
 const ProductModel = require("../model/product.schema");
 const cloudinary = require("../middlewares/cloudinary");
+const { MercadoPagoConfig, Preference } = require("mercadopago");
 
 const getAllProducts = async (req, res) => {
   try {
     console.log(req.query);
     const numeroPagina = req.query.numeroPagina || 0;
-    const limite = req.query.limite || 5;
+    const limite = req.query.limite || 100;
 
     const [products, count] = await Promise.all([
       ProductModel.find()
@@ -176,6 +177,44 @@ const enabledProduct = async (req, res) => {
   }
 };
 
+const mercadoPagoPay = async (req, res) => {
+  try {
+    const client = new MercadoPagoConfig({
+      accessToken: `${process.env.MP_ACCESS_TOKEN}`,
+    });
+
+    const body = {
+      items: [
+        {
+          title: "celular",
+          quantity: 1,
+          unit_price: 15000,
+          currency_id: "ARS",
+        },
+        {
+          title: "cargador",
+          quantity: 2,
+          unit_price: 20000,
+          currency_id: "ARS",
+        },
+      ],
+      backs_url: {
+        success: `${process.env.MP_SUCCESS}`,
+        failure: `${process.env.MP_FAILURE}`,
+        pending: `${process.env.MP_PENDING}`,
+      },
+      //auto_return: "approved",
+    };
+
+    const preference = new Preference(client);
+    const result = await preference.create({ body });
+
+    res.status(200).json({ result: result.init_point });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 module.exports = {
   getAllProductsEnabled,
   getAllProductsDisabled,
@@ -186,4 +225,5 @@ module.exports = {
   deleteProduct,
   disabledProduct,
   enabledProduct,
+  mercadoPagoPay,
 };
