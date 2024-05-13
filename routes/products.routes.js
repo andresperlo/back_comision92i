@@ -10,6 +10,7 @@ const {
   getAllProductsEnabled,
   getAllProductsDisabled,
   mercadoPagoPay,
+  addOrUpdateImgProduct,
 } = require("../controllers/products.controllers");
 const auth = require("../middlewares/auth");
 const { check } = require("express-validator");
@@ -29,13 +30,14 @@ route.get(
 );
 /* POST - Crear */
 route.post("/pay", mercadoPagoPay);
-route.post("/", multer.single("imagen"), createProduct);
+route.post("/", createProduct);
 /* PUT - Actualizar */
 route.put(
   "/:id",
   [check("id", "Formato ID Incorrecto").isMongoId()],
   updateProduct
 );
+route.put("/addImg/:idProduct", multer.single("imagen"), addOrUpdateImgProduct);
 route.put("/disabled/:idProd", disabledProduct);
 route.put("/enabled/:idProd", enabledProduct);
 /* DELETE - Borrar */

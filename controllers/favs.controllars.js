@@ -1,5 +1,15 @@
+const { validationResult } = require("express-validator");
 const FavsModel = require("../model/FavsSchema");
 const ProductModel = require("../model/product.schema");
+
+const getFav = async (req, res) => {
+  try {
+    const fav = await FavsModel.findOne({ _id: req.idFav });
+    res.status(200).json({ msg: "Favoritos", favs: fav.products });
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 const addProdFav = async (req, res) => {
   try {
@@ -9,7 +19,7 @@ const addProdFav = async (req, res) => {
       return res.status(422).json(errors.array());
     }
 
-    const fav = await FavsModel.findOne({ _id: req.idCart });
+    const fav = await FavsModel.findOne({ _id: req.idFav });
     const product = await ProductModel.findOne({ _id: req.params.idProd });
 
     fav.products.push(product);
@@ -31,7 +41,7 @@ const removeProdFav = async (req, res) => {
       return res.status(422).json(errors.array());
     }
 
-    const fav = await FavsModel.findOne({ _id: req.idCart });
+    const fav = await FavsModel.findOne({ _id: req.idFav });
     const products = fav.products.filter(
       (product) => product._id.toString() !== req.params.idProd
     );
@@ -50,4 +60,5 @@ const removeProdFav = async (req, res) => {
 module.exports = {
   addProdFav,
   removeProdFav,
+  getFav,
 };

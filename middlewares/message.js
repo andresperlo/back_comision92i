@@ -25,7 +25,7 @@ const recoveryPassMsg = async (token) => {
       subject: "Pasos para recuperar contraseña", // Subject line
       html: `
       <b>Haz click en el siguiente enlace para recuperar tu contraseña</b>
-      <button>Haz click <a href='/recoveryPass/${token}'>aqui</a></button>
+      <button>Haz click <a href='${process.env.URL_FRONT}/changePass/${token}'>aqui</a></button>
       `, // html body
     });
 

@@ -1,5 +1,15 @@
+const { validationResult } = require("express-validator");
 const CartModel = require("../model/CartSchema");
 const ProductModel = require("../model/product.schema");
+
+const getCart = async (req, res) => {
+  try {
+    const cart = await CartModel.findOne({ _id: req.idCart });
+    res.status(200).json({ msg: "Favoritos", cart: cart.products });
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 const addProdCart = async (req, res) => {
   try {
@@ -50,4 +60,5 @@ const removeProdCart = async (req, res) => {
 module.exports = {
   addProdCart,
   removeProdCart,
+  getCart,
 };

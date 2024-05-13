@@ -79,16 +79,7 @@ const createProduct = async (req, res) => {
       return res.status(400).json({ msg: "El Campo CODIGO esta Vacio" });
     }
 
-    const responseCloudinary = await cloudinary.uploader.upload(req.file.path);
-
-    const newProduct = {
-      nombre,
-      precio,
-      codigo,
-      imagen: responseCloudinary.secure_url,
-    };
-
-    const newProd = new ProductModel(newProduct);
+    const newProd = new ProductModel(req.body);
     await newProd.save();
 
     res.status(201).json({ msg: "Producto Creado", newProd });
@@ -116,7 +107,21 @@ const updateProduct = async (req, res) => {
       updateProduct,
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ msg: "Error: Server", error });
+  }
+};
+
+const addOrUpdateImgProduct = async (req, res) => {
+  try {
+    const product = await ProductModel.findOne({ _id: req.params.idProduct });
+
+    const responseCloudinary = await cloudinary.uploader.upload(req.file.path);
+
+    (product.imagen = responseCloudinary.secure_url), await product.save();
+    res.status(200).json({ msg: "Producto" });
+  } catch (error) {
+    console.log(error);
   }
 };
 
@@ -207,9 +212,32 @@ const mercadoPagoPay = async (req, res) => {
     };
 
     const preference = new Preference(client);
-    const result = await preference.create({ body });
+    const result = await preference.create({
+      body: {
+        items: [
+          {
+            title: "celular",
+            quantity: 1,
+            unit_price: 15000,
+            currency_id: "ARS",
+          },
+          {
+            title: "cargador",
+            quantity: 2,
+            unit_price: 20000,
+            currency_id: "ARS",
+          },
+        ],
+        backs_url: {
+          success: `${process.env.MP_SUCCESS}`,
+          failure: `${process.env.MP_FAILURE}`,
+          pending: `${process.env.MP_PENDING}`,
+        },
+        // auto_return: "approved",
+      },
+    });
 
-    res.status(200).json({ result: result.init_point });
+    res.status(200).json({ id: result.id });
   } catch (error) {
     console.log(error);
   }
@@ -226,4 +254,5 @@ module.exports = {
   disabledProduct,
   enabledProduct,
   mercadoPagoPay,
+  addOrUpdateImgProduct,
 };

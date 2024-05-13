@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 module.exports = (role) => (req, res, next) => {
   try {
     const token = req.header("auth")?.replace("Bearer ", "");
+    console.log(token);
     if (token) {
       const verifyToken = jwt.verify(token, process.env.JWT_SECRET);
       if (verifyToken.user.role === role) {

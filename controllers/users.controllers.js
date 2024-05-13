@@ -6,6 +6,29 @@ const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const { userRegister, recoveryPassMsg } = require("../middlewares/message");
 
+const getAllUsers = async (req, res) => {
+  try {
+    const getUsers = await UserModel.find();
+    res.status(200).json({ msg: "Todos los usuarios", getUsers });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const updateUser = async (req, res) => {
+  try {
+    const update = await UserModel.findByIdAndUpdate(
+      { _id: req.params.idUser },
+      req.body,
+      { new: true }
+    );
+
+    res.status(200).json({ msg: "Usuario Actualizado", update });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 const registerUser = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -140,7 +163,9 @@ const recoveryPass = async (req, res) => {
 
 const changePass = async (req, res) => {
   try {
-    const user = await UserModel.findOne({ _id: req.idUser });
+    console.log(req.body);
+    const verifyToken = jwt.verify(req.body.token, process.env.JWT_SECRET);
+    const user = await UserModel.findOne({ _id: verifyToken.user.idUser });
 
     let salt = bcrypt.genSaltSync(10);
     user.contrasenia = bcrypt.hashSync(req.body.contrasenia, salt);
@@ -152,9 +177,21 @@ const changePass = async (req, res) => {
   }
 };
 
+const deleteUser = async (req, res) => {
+  try {
+    await UserModel.findByIdAndDelete({ _id: req.params.idUser });
+    res.status(200).json({ msg: "usuario eliminado" });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 module.exports = {
+  getAllUsers,
+  updateUser,
   registerUser,
   loginUser,
   recoveryPass,
   changePass,
+  deleteUser,
 };
